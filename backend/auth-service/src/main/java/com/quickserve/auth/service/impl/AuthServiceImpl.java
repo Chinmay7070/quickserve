@@ -1,9 +1,6 @@
 package com.quickserve.auth.service.impl;
 
-import com.quickserve.auth.dto.RegisterRequestDTO;
-import com.quickserve.auth.dto.RegisterResponseDTO;
-import com.quickserve.auth.dto.VerifyOtpRequestDTO;
-import com.quickserve.auth.dto.VerifyOtpResponseDTO;
+import com.quickserve.auth.dto.*;
 import com.quickserve.auth.eintity.OtpToken;
 import com.quickserve.auth.eintity.Role;
 import com.quickserve.auth.eintity.User;
@@ -114,4 +111,35 @@ public class AuthServiceImpl implements AuthService {
                 .message("Email verified successfully")
                 .build();
     }
+
+    @Override
+    public ResendOtpResponseDTO resendOtp(ResendOtpRequestDTO resendOtpRequestDTO) {
+
+        User user = userRepository.findByEmail(resendOtpRequestDTO.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getIsVerified()) {
+            throw new RuntimeException("Email already verified");
+        }
+
+        String otp = otpGenerator.generateOpt();
+
+        OtpToken otpToken = OtpToken.builder()
+                .email(user.getEmail())
+                .otp(otp)
+                .type(OtpType.REGISTRATION)
+                .isUsed(false)
+                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .build();
+
+        otpTokenRepository.save(otpToken);
+
+        emailService.sendOtpEmail(user.getEmail(), otp);
+
+        return ResendOtpResponseDTO.builder()
+                .email(user.getEmail())
+                .message("New OTP sent to your email.")
+                .build();
+    }
+
 }
