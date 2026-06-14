@@ -1,9 +1,6 @@
 package com.quickserve.auth.controller;
 
-import com.quickserve.auth.dto.RegisterRequestDTO;
-import com.quickserve.auth.dto.RegisterResponseDTO;
-import com.quickserve.auth.dto.VerifyOtpRequestDTO;
-import com.quickserve.auth.dto.VerifyOtpResponseDTO;
+import com.quickserve.auth.dto.*;
 import com.quickserve.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +23,12 @@ public class AuthController {
     @PostMapping("/verify-otp")
     public ResponseEntity<VerifyOtpResponseDTO> verifyOtp(@Valid @RequestBody VerifyOtpRequestDTO verifyOtpRequestDTO) {
         VerifyOtpResponseDTO result = authService.verifyOtp(verifyOtpRequestDTO);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ResendOtpResponseDTO> resendOtp(@Valid @RequestBody ResendOtpRequestDTO resendOtpRequestDTO){
+        ResendOtpResponseDTO result = authService.resendOtp(resendOtpRequestDTO);
         return ResponseEntity.ok(result);
     }
 }
