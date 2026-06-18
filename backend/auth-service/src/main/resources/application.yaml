@@ -38,3 +38,6 @@ eureka:
   instance:
     prefer-ip-address: true
 
+jwt:
+  secret: QuickServeSecretKeyForJWTTokenGenerationAndValidation2024
+  expiration: 36000000

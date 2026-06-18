@@ -11,6 +11,7 @@ import com.quickserve.auth.repository.RoleRepository;
 import com.quickserve.auth.repository.UserRepository;
 import com.quickserve.auth.service.AuthService;
 import com.quickserve.auth.service.EmailService;
+import com.quickserve.auth.util.JwtUtil;
 import com.quickserve.auth.util.OtpGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,7 @@ public class AuthServiceImpl implements AuthService {
     private final OtpGenerator otpGenerator;
     private final OtpTokenRepository otpTokenRepository;
     private final EmailService emailService;
+    private final JwtUtil jwtUtil;
 
     @Override
     public RegisterResponseDTO register(RegisterRequestDTO registerRequestDTO) {
@@ -141,5 +143,39 @@ public class AuthServiceImpl implements AuthService {
                 .message("New OTP sent to your email.")
                 .build();
     }
+
+    @Override
+    public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
+
+        User user = userRepository.findByEmail(loginRequestDTO.getEmail())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        if (!user.getIsActive()) {
+            throw new RuntimeException("Account is deactivated");
+        }
+
+        if (!user.getIsVerified()) {
+            throw new RuntimeException("Please verify your email first");
+        }
+
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        String token = jwtUtil.genereateToken(
+                user.getEmail(),
+                user.getUserId(),
+                user.getRole().getRoleName().toString()
+        );
+
+        return LoginResponseDTO.builder()
+                .userId(user.getUserId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole().getRoleName().toString())
+                .token(token)
+                .build();
+    }
+
 
 }
