@@ -31,4 +31,10 @@ public class AuthController {
         ResendOtpResponseDTO result = authService.resendOtp(resendOtpRequestDTO);
         return ResponseEntity.ok(result);
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
+        LoginResponseDTO result = authService.login(loginRequestDTO);
+        return ResponseEntity.ok(result);
+    }
 }
