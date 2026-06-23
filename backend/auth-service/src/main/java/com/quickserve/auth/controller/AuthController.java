@@ -37,4 +37,10 @@ public class AuthController {
         LoginResponseDTO result = authService.login(loginRequestDTO);
         return ResponseEntity.ok(result);
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ForgotPasswordResponseDTO> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
+        ForgotPasswordResponseDTO result = authService.forgotPassword(forgotPasswordRequestDTO);
+        return ResponseEntity.ok(result);
+    }
 }

@@ -8,4 +8,5 @@ public interface AuthService {
     VerifyOtpResponseDTO verifyOtp(VerifyOtpRequestDTO verifyOtpRequestDTO);
     ResendOtpResponseDTO resendOtp(ResendOtpRequestDTO resendOtpRequestDTO);
     LoginResponseDTO login(LoginRequestDTO loginRequestDTO);
+    ForgotPasswordResponseDTO forgotPassword(ForgotPasswordRequestDTO forgotPasswordRequestDTO);
 }

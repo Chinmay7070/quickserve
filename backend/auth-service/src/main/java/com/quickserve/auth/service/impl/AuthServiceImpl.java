@@ -31,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final JwtUtil jwtUtil;
 
+
     @Override
     public RegisterResponseDTO register(RegisterRequestDTO registerRequestDTO) {
 
@@ -174,6 +175,40 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .role(user.getRole().getRoleName().toString())
                 .token(token)
+                .build();
+    }
+
+    @Override
+    public ForgotPasswordResponseDTO forgotPassword(ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
+
+        User user = userRepository.findByEmail(forgotPasswordRequestDTO.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getIsVerified()) {
+            throw new RuntimeException("Please verify your email first");
+        }
+
+        if (!user.getIsActive()) {
+            throw new RuntimeException("Account is deactivated");
+        }
+
+        String otp = otpGenerator.generateOpt();
+
+        OtpToken otpToken = OtpToken.builder()
+                .email(user.getEmail())
+                .otp(otp)
+                .type(OtpType.FORGOT_PASSWORD)
+                .isUsed(false)
+                .expiresAt(LocalDateTime.now().plusMinutes(10))
+                .build();
+
+        otpTokenRepository.save(otpToken);
+
+        emailService.sendOtpEmail(user.getEmail(), otp);
+
+        return ForgotPasswordResponseDTO.builder()
+                .email(user.getEmail())
+                .message("Password reset OTP sent to your email.")
                 .build();
     }
 
