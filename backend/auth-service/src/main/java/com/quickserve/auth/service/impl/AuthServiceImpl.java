@@ -240,5 +240,44 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
+    public ResetPasswordResponseDTO resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
+
+        User user = userRepository.findByEmail(resetPasswordRequestDTO.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!resetPasswordRequestDTO.getNewPassword().equals(resetPasswordRequestDTO.getConfirmPassword())) {
+            throw new RuntimeException("New password and confirm password do not match");
+        }
+
+        String encryptedPassword = passwordEncoder.encode(resetPasswordRequestDTO.getNewPassword());
+
+        user.setPassword(encryptedPassword);
+        userRepository.save(user);
+
+        return ResetPasswordResponseDTO.builder()
+                .email(user.getEmail())
+                .message("Password reset successfully. Please login with your new password.")
+                .build();
+    }
+    @Override
+    public ProfileResponseDTO getProfile(String token) {
+
+        String email = jwtUtil.extractEmail(token);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ProfileResponseDTO.builder()
+                .userId(user.getUserId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole().getRoleName().toString())
+                .isVerified(user.getIsVerified())
+                .isActive(user.getIsActive())
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
+
 
 }

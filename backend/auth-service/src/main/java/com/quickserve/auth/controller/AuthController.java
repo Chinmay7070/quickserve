@@ -49,4 +49,19 @@ public class AuthController {
         VerifyForgotOtpResponseDTO result = authService.verifyForgotOtp(verifyForgotOtpRequestDTO);
         return ResponseEntity.ok(result);
     }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ResetPasswordResponseDTO> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
+        ResetPasswordResponseDTO result = authService.resetPassword(resetPasswordRequestDTO);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ProfileResponseDTO> getProfile(
+            @RequestHeader("Authorization") String authHeader) {
+
+        String token = authHeader.substring(7);
+        ProfileResponseDTO result = authService.getProfile(token);
+        return ResponseEntity.ok(result);
+    }
 }

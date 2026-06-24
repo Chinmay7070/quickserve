@@ -11,4 +11,6 @@ public interface AuthService {
     ForgotPasswordResponseDTO forgotPassword(ForgotPasswordRequestDTO forgotPasswordRequestDTO);
 
     VerifyForgotOtpResponseDTO verifyForgotOtp(VerifyForgotOtpRequestDTO verifyForgotOtpRequestDTO);
+    ResetPasswordResponseDTO resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO);
+    ProfileResponseDTO getProfile(String token);
 }
