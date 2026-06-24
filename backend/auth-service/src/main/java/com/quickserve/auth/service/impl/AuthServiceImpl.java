@@ -6,6 +6,9 @@ import com.quickserve.auth.eintity.Role;
 import com.quickserve.auth.eintity.User;
 import com.quickserve.auth.eintity.enums.OtpType;
 import com.quickserve.auth.eintity.enums.RoleName;
+import com.quickserve.auth.exception.BadRequestException;
+import com.quickserve.auth.exception.ResourceNotFoundException;
+import com.quickserve.auth.exception.UnauthorizedException;
 import com.quickserve.auth.repository.OtpTokenRepository;
 import com.quickserve.auth.repository.RoleRepository;
 import com.quickserve.auth.repository.UserRepository;
@@ -36,17 +39,17 @@ public class AuthServiceImpl implements AuthService {
     public RegisterResponseDTO register(RegisterRequestDTO registerRequestDTO) {
 
         if (userRepository.existsByEmail(registerRequestDTO.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new BadRequestException("Email already registered");
         }
 
         if (!registerRequestDTO.getPassword().equals(registerRequestDTO.getConfirmPassword())) {
-            throw new RuntimeException("Password and Confirm Password do not match");
+            throw new BadRequestException("Password and Confirm Password do not match");
         }
 
         RoleName roleName = RoleName.valueOf(registerRequestDTO.getRole().toUpperCase());
 
         Role role = roleRepository.findByRoleName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleName));
 
         String encryptedPassword = passwordEncoder.encode(registerRequestDTO.getPassword());
 
@@ -89,18 +92,18 @@ public class AuthServiceImpl implements AuthService {
 
         OtpToken otpToken = otpTokenRepository
                 .findByEmailAndOtp(verifyOtpRequestDTO.getEmail(), verifyOtpRequestDTO.getOtp())
-                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
+                .orElseThrow(() -> new BadRequestException("Invalid OTP"));
 
         if (otpToken.getIsUsed()) {
-            throw new RuntimeException("OTP already used");
+            throw new BadRequestException("OTP already used");
         }
 
         if (otpToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("OTP expired");
+            throw new BadRequestException("OTP expired");
         }
 
         User user = userRepository.findByEmail(verifyOtpRequestDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setIsVerified(true);
         userRepository.save(user);
@@ -119,10 +122,10 @@ public class AuthServiceImpl implements AuthService {
     public ResendOtpResponseDTO resendOtp(ResendOtpRequestDTO resendOtpRequestDTO) {
 
         User user = userRepository.findByEmail(resendOtpRequestDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (user.getIsVerified()) {
-            throw new RuntimeException("Email already verified");
+            throw new BadRequestException("Email already verified");
         }
 
         String otp = otpGenerator.generateOpt();
@@ -149,18 +152,18 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
 
         User user = userRepository.findByEmail(loginRequestDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
         if (!user.getIsActive()) {
-            throw new RuntimeException("Account is deactivated");
+            throw new UnauthorizedException("Account is deactivated");
         }
 
         if (!user.getIsVerified()) {
-            throw new RuntimeException("Please verify your email first");
+            throw new UnauthorizedException("Please verify your email first");
         }
 
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
         String token = jwtUtil.genereateToken(
@@ -182,14 +185,14 @@ public class AuthServiceImpl implements AuthService {
     public ForgotPasswordResponseDTO forgotPassword(ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
 
         User user = userRepository.findByEmail(forgotPasswordRequestDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!user.getIsVerified()) {
-            throw new RuntimeException("Please verify your email first");
+            throw new BadRequestException("Please verify your email first");
         }
 
         if (!user.getIsActive()) {
-            throw new RuntimeException("Account is deactivated");
+            throw new BadRequestException("Account is deactivated");
         }
 
         String otp = otpGenerator.generateOpt();
@@ -221,14 +224,14 @@ public class AuthServiceImpl implements AuthService {
                         verifyForgotOtpRequestDTO.getOtp(),
                         OtpType.FORGOT_PASSWORD
                 )
-                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
+                .orElseThrow(() -> new BadRequestException("Invalid OTP"));
 
         if (otpToken.getIsUsed()) {
-            throw new RuntimeException("OTP already used");
+            throw new BadRequestException("OTP already used");
         }
 
         if (otpToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("OTP expired");
+            throw new BadRequestException("OTP expired");
         }
 
         otpToken.setIsUsed(true);
@@ -244,10 +247,10 @@ public class AuthServiceImpl implements AuthService {
     public ResetPasswordResponseDTO resetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO) {
 
         User user = userRepository.findByEmail(resetPasswordRequestDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!resetPasswordRequestDTO.getNewPassword().equals(resetPasswordRequestDTO.getConfirmPassword())) {
-            throw new RuntimeException("New password and confirm password do not match");
+            throw new BadRequestException("New password and confirm password do not match");
         }
 
         String encryptedPassword = passwordEncoder.encode(resetPasswordRequestDTO.getNewPassword());
@@ -266,7 +269,7 @@ public class AuthServiceImpl implements AuthService {
         String email = jwtUtil.extractEmail(token);
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return ProfileResponseDTO.builder()
                 .userId(user.getUserId())
