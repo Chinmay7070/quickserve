@@ -9,4 +9,6 @@ public interface AuthService {
     ResendOtpResponseDTO resendOtp(ResendOtpRequestDTO resendOtpRequestDTO);
     LoginResponseDTO login(LoginRequestDTO loginRequestDTO);
     ForgotPasswordResponseDTO forgotPassword(ForgotPasswordRequestDTO forgotPasswordRequestDTO);
+
+    VerifyForgotOtpResponseDTO verifyForgotOtp(VerifyForgotOtpRequestDTO verifyForgotOtpRequestDTO);
 }
