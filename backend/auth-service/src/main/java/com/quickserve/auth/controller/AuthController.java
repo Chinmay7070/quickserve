@@ -43,4 +43,10 @@ public class AuthController {
         ForgotPasswordResponseDTO result = authService.forgotPassword(forgotPasswordRequestDTO);
         return ResponseEntity.ok(result);
     }
+
+    @PostMapping("/verify-forgot-otp")
+    public ResponseEntity<VerifyForgotOtpResponseDTO> verifyForgotOtp(@Valid @RequestBody VerifyForgotOtpRequestDTO verifyForgotOtpRequestDTO) {
+        VerifyForgotOtpResponseDTO result = authService.verifyForgotOtp(verifyForgotOtpRequestDTO);
+        return ResponseEntity.ok(result);
+    }
 }

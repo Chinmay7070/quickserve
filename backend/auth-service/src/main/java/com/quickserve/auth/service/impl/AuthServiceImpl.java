@@ -212,5 +212,33 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
+    public VerifyForgotOtpResponseDTO verifyForgotOtp(VerifyForgotOtpRequestDTO verifyForgotOtpRequestDTO) {
+
+        OtpToken otpToken = otpTokenRepository
+                .findByEmailAndOtpAndType(
+                        verifyForgotOtpRequestDTO.getEmail(),
+                        verifyForgotOtpRequestDTO.getOtp(),
+                        OtpType.FORGOT_PASSWORD
+                )
+                .orElseThrow(() -> new RuntimeException("Invalid OTP"));
+
+        if (otpToken.getIsUsed()) {
+            throw new RuntimeException("OTP already used");
+        }
+
+        if (otpToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("OTP expired");
+        }
+
+        otpToken.setIsUsed(true);
+        otpTokenRepository.save(otpToken);
+
+        return VerifyForgotOtpResponseDTO.builder()
+                .email(verifyForgotOtpRequestDTO.getEmail())
+                .message("OTP verified successfully. Please reset your password.")
+                .build();
+    }
+
 
 }
